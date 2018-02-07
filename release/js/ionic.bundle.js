@@ -9,7 +9,7 @@
  * Copyright 2015 Drifty Co.
  * http://drifty.com/
  *
- * Ionic, v1.3.3
+ * Ionic, v1.3.5
  * A powerful HTML5 mobile app framework.
  * http://ionicframework.com/
  *
@@ -25,7 +25,7 @@
 // build processes may have already created an ionic obj
 window.ionic = window.ionic || {};
 window.ionic.views = {};
-window.ionic.version = '1.3.3';
+window.ionic.version = '1.3.5';
 
 (function (ionic) {
 
@@ -7381,7 +7381,8 @@ ionic.scroll = {
 
             ionic.requestAnimationFrame(function(){
               // D - A or B - A if D > B       D - A             max(0, D - B)
-              scrollViewOffsetHeight = Math.max(0, Math.min(self.__originalContainerHeight, self.__originalContainerHeight - (e.detail.keyboardHeight - 43)));//keyboardOffset >= 0 ? scrollViewOffsetHeight - keyboardOffset : scrollViewOffsetHeight + keyboardOffset;
+              // scrollViewOffsetHeight = Math.max(0, Math.min(self.__originalContainerHeight, self.__originalContainerHeight - (e.detail.keyboardHeight - 43)));//keyboardOffset >= 0 ? scrollViewOffsetHeight - keyboardOffset : scrollViewOffsetHeight + keyboardOffset;
+              scrollViewOffsetHeight = Math.max(0, Math.min(self.__originalContainerHeight, self.__originalContainerHeight - (e.detail.keyboardHeight - (window.innerHeight - rect.bottom))));
 
               //console.log('Old container height', self.__originalContainerHeight, 'New container height', scrollViewOffsetHeight, 'Keyboard height', e.detail.keyboardHeight);
 
@@ -53185,7 +53186,7 @@ angular.module('ui.router.state')
  * Copyright 2015 Drifty Co.
  * http://drifty.com/
  *
- * Ionic, v1.3.3
+ * Ionic, v1.3.5
  * A powerful HTML5 mobile app framework.
  * http://ionicframework.com/
  *
@@ -55843,7 +55844,10 @@ function($rootScope, $ionicBody, $compile, $timeout, $ionicPlatform, $ionicTempl
       }
 
       return $timeout(function() {
-        if (!modalStack.length) {
+        var modalOfTypeExists = modalStack.some(function(modal) {
+          return modal.viewType === self.viewType;
+        });
+        if (!modalOfTypeExists) {
           $ionicBody.removeClass(self.viewType + '-open');
         }
         self.el.classList.add('hide');
@@ -58603,7 +58607,8 @@ function($scope, $element, $attrs, $q, $ionicConfig, $ionicHistory) {
       // to calculate the width of the title
       var children = angular.element(element).children();
       for ( var i = 0; i < children.length; i++ ) {
-        if ( angular.element(children[i]).hasClass('nav-bar-title') ) {
+        var child = angular.element(children[i]);
+        if ( child.hasClass('nav-bar-title') && !child.hasClass('hide') ) {
           element = children[i];
           break;
         }
@@ -60503,9 +60508,24 @@ IonicModule
       var q = $scope.$onRefresh();
 
       if (q && q.then) {
-        q['finally'](function() {
-          $scope.$broadcast('scroll.refreshComplete');
-        });
+        if (q['finally']) {
+          q['finally'](broadcastRefreshEnd);
+        } else {
+          q.then(
+            function(payload) {
+              broadcastRefreshEnd();
+              return payload;
+            },
+            function(error) {
+              broadcastRefreshEnd();
+              throw error;
+            }
+          );
+        }
+      }
+
+      function broadcastRefreshEnd() {
+        $scope.$broadcast('scroll.refreshComplete');
       }
     }
 
@@ -65679,7 +65699,7 @@ IonicModule
 
         $scope.$on('scroll.refreshComplete', function() {
           $scope.$evalAsync(function() {
-            if(scrollCtrl.scrollView){
+            if (scrollCtrl.scrollView) {
               scrollCtrl.scrollView.finishPullToRefresh();
             }
           });
