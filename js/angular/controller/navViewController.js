@@ -434,7 +434,7 @@ function($scope, $element, $attrs, $compile, $controller, $ionicNavBarDelegate, 
         var velocity = Math.abs(startDrag.x - releaseX) / (now - startDrag.t);
 
         // private variables because ui-router has no way to pass custom data using $state.go
-        disableRenderStartViewId = backView.viewId;
+        // disableRenderStartViewId = backView.viewId; // hack for swipeBack
         disableAnimation = (releaseSwipeCompletion < 0.03 || releaseSwipeCompletion > 0.97);
 
         if (isSwipingRight && (releaseSwipeCompletion > 0.5 || velocity > 0.1)) {
